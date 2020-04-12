@@ -8,6 +8,8 @@ defmodule GuardianFirebase.KeyManager do
   require Logger
 
   @key_url "https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com"
+  @default_hackney_options [ssl_options: [versions: [:"tlsv1.2", :"tlsv1.1", :tlsv1]]]
+  @hackney_options Application.get_env(:guardian_firebase, :hackney_options, @default_hackney_options)
 
   def start_link(_arg) do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
@@ -53,7 +55,7 @@ defmodule GuardianFirebase.KeyManager do
   end
 
   defp reload_keys do
-    case :hackney.get(@key_url, [], "", []) do
+    case :hackney.get(@key_url, [], "", @hackney_options) do
       {:ok, 200, headers, client} ->
         update_keys(headers, client)
 
